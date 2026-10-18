@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ワンタッチ元気だよ — プロトタイプ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+  :root {
+    --green: #3DBD7D;
+    --green-light: #E8F8F0;
+    --green-dark: #2A9B62;
+    --yellow: #FFD94A;
+    --yellow-light: #FFFBE6;
+    --red: #FF5A5A;
+    --red-light: #FFF0F0;
+    --gray: #6B7280;
+    --gray-light: #F5F5F7;
+    --text: #1A1A2E;
+    --white: #FFFFFF;
+    --radius: 20px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: #ECEEF2;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  h1.page-title {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gray);
+    letter-spacing: 0.08em;
+    margin-bottom: 40px;
+    text-transform: none;
+  }
+
+  .screens-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .screen-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .screen-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray);
+    letter-spacing: 0.06em;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 320px;
+    height: 620px;
+    background: var(--white);
+    border-radius: 40px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18), inset 0 0 0 2px #D1D5DB;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .statusbar {
+    height: 36px;
+    background: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  .screen-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== SCREEN 1: Push Notification ===== */
+  .notif-screen {
+    background: #1A1A2E;
+  }
+
+  .notif-screen .statusbar {
+    color: white;
+    background: transparent;
+  }
+
+  .notif-lockscreen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0 0;
+    position: relative;
+  }
+
+  .lock-time {
+    font-size: 52px;
+    font-weight: 900;
+    color: white;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+
+  .lock-date {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 6px;
+    margin-bottom: 24px;
+  }
+
+  .notif-card {
+    width: calc(100% - 32px);
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .notif-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--green);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .notif-text-block { flex: 1; }
+
+  .notif-app-name {
+    font-size: 10px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .notif-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.3;
+  }
+
+  .notif-body {
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  .notif-swipe-hint {
+    position: absolute;
+    bottom: 24px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* ===== SCREEN 2: Answer Screen ===== */
+  .answer-screen {
+    background: var(--green-light);
+  }
+
+  .answer-header {
+    background: var(--green);
+    padding: 20px 20px 16px;
+    text-align: center;
+  }
+
+  .answer-header-app {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 4px;
+  }
+
+  .answer-header-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
+    line-height: 1.2;
+  }
+
+  .answer-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 24px 32px;
+    gap: 16px;
+  }
+
+  .answer-question {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .answer-sub {
+    font-size: 13px;
+    color: var(--gray);
+    text-align: center;
+    margin-top: -4px;
+    margin-bottom: 8px;
+  }
+
+  .btn-yes {
+    width: 100%;
+    height: 80px;
+    background: var(--green);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 26px;
+    font-weight: 900;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 6px 0 var(--green-dark);
+  }
+
+  .btn-no {
+    width: 100%;
+    height: 64px;
+    background: white;
+    border: 2.5px solid #D1D5DB;
+    border-radius: var(--radius);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* ===== SCREEN 3: Family Dashboard ===== */
+  .dash-screen {
+    background: var(--gray-light);
+  }
+
+  .dash-header {
+    background: var(--white);
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  .dash-header-title {
+    font-size: 17px;
+    font-weight: 900;
+    color: var(--text);
+  }
+
+  .dash-header-sub {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 2px;
+  }
+
+  .dash-body {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  .dash-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray);
+    margin-bottom: -2px;
+  }
+
+  .member-card {
+    background: white;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .member-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .avatar-green { background: var(--green-light); }
+  .avatar-yellow { background: var(--yellow-light); }
+  .avatar-gray { background: var(--gray-light); }
+
+  .member-info { flex: 1; }
+
+  .member-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .member-time {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 1px;
+  }
+
+  .status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .badge-ok { background: var(--green-light); color: var(--green-dark); }
+  .badge-wait { background: var(--yellow-light); color: #B45309; }
+  .badge-ng { background: var(--red-light); color: var(--red); }
+
+  /* ===== SCREEN 4: Alert ===== */
+  .alert-screen {
+    background: var(--red-light);
+  }
+
+  .alert-screen .statusbar {
+    color: var(--text);
+  }
+
+  .alert-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .alert-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+  }
+
+  .alert-title {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--red);
+    line-height: 1.3;
+  }
+
+  .alert-sub {
+    font-size: 13px;
+    color: var(--gray);
+    line-height: 1.6;
+  }
+
+  .alert-who {
+    background: white;
+    border-radius: 14px;
+    padding: 12px 20px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .alert-who-text {
+    text-align: left;
+  }
+
+  .alert-who-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .alert-who-detail {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 1px;
+  }
+
+  .btn-call {
+    width: 100%;
+    height: 64px;
+    background: var(--red);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-secondary {
+    font-size: 13px;
+    color: var(--gray);
+    cursor: pointer;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  /* ===== Expanded Notification Card ===== */
+  .notif-card-expanded {
+    width: calc(100% - 32px);
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .notif-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px 12px;
+  }
+
+  .notif-actions {
+    border-top: 1px solid rgba(255,255,255,0.15);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .notif-action-btn {
+    width: 100%;
+    padding: 14px 16px;
+    background: none;
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  .notif-action-btn:first-child {
+    border-top: none;
+  }
+
+  .notif-action-yes {
+    color: #4ADE80;
+  }
+
+  .notif-action-no {
+    color: rgba(255,255,255,0.65);
+  }
+
+  /* ===== Banner Notification ===== */
+  .banner-notif {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    z-index: 10;
+    border: 1.5px solid var(--green-light);
+  }
+
+  .banner-icon {
+    width: 34px;
+    height: 34px;
+    background: var(--green);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .banner-text { flex: 1; }
+
+  .banner-app {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gray);
+    margin-bottom: 2px;
+  }
+
+  .banner-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  /* ===== SCREEN 5: Settings ===== */
+  .settings-screen {
+    background: var(--gray-light);
+  }
+
+  .settings-header {
+    background: var(--white);
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  .settings-header-title {
+    font-size: 17px;
+    font-weight: 900;
+    color: var(--text);
+  }
+
+  .settings-body {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow: hidden;
+  }
+
+  .settings-group-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray);
+    margin-bottom: -8px;
+  }
+
+  .settings-card {
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #F3F4F6;
+  }
+
+  .settings-row:last-child { border-bottom: none; }
+
+  .settings-row-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .settings-row-sub {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 1px;
+  }
+
+  .settings-row-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  .settings-time-picker {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--green);
+    text-align: center;
+    padding: 8px 0;
+    background: var(--green-light);
+    border-radius: 10px;
+    width: 120px;
+  }
+
+  .settings-add-btn {
+    background: var(--green-light);
+    color: var(--green-dark);
+    border: 2px dashed var(--green);
+    border-radius: 14px;
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .mini-member {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #F3F4F6;
+  }
+
+  .mini-member:last-child { border-bottom: none; }
+
+  .mini-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .mini-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .mini-role {
+    font-size: 11px;
+    color: var(--gray);
+    background: var(--gray-light);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">ワンタッチ元気だよ — 画面プロトタイプ</h1>
+
+<div class="screens-grid">
+
+  <!-- Screen 1a: Push Notification (collapsed) -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="screen-content notif-screen">
+        <div class="statusbar" style="color:white;">
+          <span>9:00</span>
+          <span>📶 🔋</span>
+        </div>
+        <div class="notif-lockscreen">
+          <div class="lock-time">9:00</div>
+          <div class="lock-date">2025年10月17日（金）</div>
+          <div class="notif-card">
+            <div class="notif-icon">🌿</div>
+            <div class="notif-text-block">
+              <div class="notif-app-name">ワンタッチ元気だよ</div>
+              <div class="notif-title">おはようございます、お父さん！</div>
+              <div class="notif-body">今日も元気ですか？タップして教えてください 👇</div>
+            </div>
+          </div>
+          <div class="notif-swipe-hint">下にスワイプしてボタンを表示</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">①a 通知（閉じた状態）</div>
+  </div>
+
+  <!-- Screen 1b: Push Notification (expanded with action buttons) -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="screen-content notif-screen">
+        <div class="statusbar" style="color:white;">
+          <span>9:00</span>
+          <span>📶 🔋</span>
+        </div>
+        <div class="notif-lockscreen">
+          <div class="lock-time">9:00</div>
+          <div class="lock-date">2025年10月17日（金）</div>
+          <!-- 展開された通知カード -->
+          <div class="notif-card-expanded">
+            <div class="notif-card-top">
+              <div class="notif-icon">🌿</div>
+              <div class="notif-text-block">
+                <div class="notif-app-name">ワンタッチ元気だよ</div>
+                <div class="notif-title">おはようございます、お父さん！</div>
+                <div class="notif-body">今日も元気ですか？</div>
+              </div>
+            </div>
+            <!-- iOSアクションボタン -->
+            <div class="notif-actions">
+              <button class="notif-action-btn notif-action-yes">✅　元気だよ！</button>
+              <button class="notif-action-btn notif-action-no">😟　ちょっとしんどい</button>
+            </div>
+          </div>
+          <div class="notif-swipe-hint">アプリを開かずにそのまま返答できます</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">①b 通知を下スワイプ → そのまま返答</div>
+  </div>
+
+  <!-- Screen 2: Answer -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="screen-content answer-screen">
+        <div class="statusbar">
+          <span>9:01</span>
+          <span>📶 🔋</span>
+        </div>
+        <div class="answer-header">
+          <div class="answer-header-app">ワンタッチ元気だよ</div>
+          <div class="answer-header-title">おはようございます<br>お父さん！🌞</div>
+        </div>
+        <div class="answer-body">
+          <div class="answer-question">今日は元気ですか？</div>
+          <div class="answer-sub">ボタンを1つ押すだけでOK</div>
+          <button class="btn-yes">✅ &nbsp;元気だよ！</button>
+          <button class="btn-no">😟 &nbsp;ちょっとしんどい</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">② 返答画面（お父さん側）</div>
+  </div>
+
+  <!-- Screen 3: Family Dashboard -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="screen-content dash-screen">
+        <div class="statusbar">
+          <span>9:03</span>
+          <span>📶 🔋</span>
+        </div>
+        <div class="dash-header">
+          <div class="dash-header-title">家族の今日の元気 🌿</div>
+          <div class="dash-header-sub">2025年10月17日 朝9時の確認</div>
+        </div>
+        <div class="dash-body">
+          <div class="dash-section-label">坂本家</div>
+          <div class="member-card">
+            <div class="member-avatar avatar-green">👴</div>
+            <div class="member-info">
+              <div class="member-name">お父さん</div>
+              <div class="member-time">9:01 に回答</div>
+            </div>
+            <div class="status-badge badge-ok">元気！</div>
+          </div>
+          <div class="member-card">
+            <div class="member-avatar avatar-yellow">👵</div>
+            <div class="member-info">
+              <div class="member-name">お母さん</div>
+              <div class="member-time">8:57 に回答</div>
+            </div>
+            <div class="status-badge badge-ok">元気！</div>
+          </div>
+          <div class="member-card">
+            <div class="member-avatar avatar-gray">🧑</div>
+            <div class="member-info">
+              <div class="member-name">かえ</div>
+              <div class="member-time">まだ回答なし</div>
+            </div>
+            <div class="status-badge badge-wait">未回答</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">③ 家族の確認画面（全員共通）</div>
+  </div>
+
+  <!-- Screen 3.5: Received OK Notification -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="screen-content dash-screen" style="position:relative;">
+        <div class="statusbar">
+          <span>9:02</span>
+          <span>📶 🔋</span>
+        </div>
+        <!-- バナー通知 -->
+        <div class="banner-notif">
+          <div class="banner-icon">🌿</div>
+          <div class="banner-text">
+            <div class="banner-app">ワンタッチ元気だよ</div>
+            <div class="banner-title">お父さんが「元気だよ！」と<br>教えてくれました 😊</div>
+          </div>
+        </div>
+        <!-- 背景は確認画面 -->
+        <div class="dash-header">
+          <div class="dash-header-title">家族の今日の元気 🌿</div>
+          <div class="dash-header-sub">2025年10月17日 朝9時の確認</div>
+        </div>
+        <div class="dash-body">
+          <div class="dash-section-label">坂本家</div>
+          <div class="member-card">
+            <div class="member-avatar avatar-green">👴</div>
+            <div class="member-info">
+              <div class="member-name">お父さん</div>
+              <div class="member-time">9:02 に回答</div>
+            </div>
+            <div class="status-badge badge-ok">元気！</div>
+          </div>
+          <div class="member-card">
+            <div class="member-avatar avatar-yellow">👵</div>
+            <div class="member-info">
+              <div class="member-name">お母さん</div>
+              <div class="member-time">8:57 に回答</div>
+            </div>
+            <div class="status-badge badge-ok">元気！</div>
+          </div>
+          <div class="member-card">
+            <div class="member-avatar" style="background:#E8F0FF;">🧑</div>
+            <div class="member-info">
+              <div class="member-name">かえ</div>
+              <div class="member-time">まだ回答なし</div>
+            </div>
+            <div class="status-badge badge-wait">未回答</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">③' 受信通知（家族側）</div>
+  </div>
+
+  <!-- Screen 4: Alert -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="screen-content alert-screen">
+        <div class="statusbar">
+          <span>9:02</span>
+          <span>📶 🔋</span>
+        </div>
+        <div class="alert-body">
+          <div class="alert-icon">🚨</div>
+          <div class="alert-title">お父さんから<br>連絡が届きました</div>
+          <div class="alert-sub">「ちょっとしんどい」と<br>回答がありました。<br>確認してみてください。</div>
+          <div class="alert-who">
+            <span style="font-size:28px;">👴</span>
+            <div class="alert-who-text">
+              <div class="alert-who-name">お父さん</div>
+              <div class="alert-who-detail">9:02 に「しんどい」と回答</div>
+            </div>
+          </div>
+          <button class="btn-call">📞 &nbsp;電話をかける</button>
+          <button class="btn-secondary">あとで確認する</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">④ アラート画面（家族側）</div>
+  </div>
+
+  <!-- Screen 5: Settings -->
+  <div class="screen-wrap">
+    <div class="phone">
+      <div class="screen-content settings-screen">
+        <div class="statusbar">
+          <span>10:00</span>
+          <span>📶 🔋</span>
+        </div>
+        <div class="settings-header">
+          <div class="settings-header-title">設定</div>
+        </div>
+        <div class="settings-body">
+          <div class="settings-group-label">通知時間</div>
+          <div class="settings-card">
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">確認時間 1</div>
+                <div class="settings-row-sub">毎日この時間に通知が届きます</div>
+              </div>
+              <div class="settings-time-picker">9:00</div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">確認時間 2</div>
+                <div class="settings-row-sub">毎日この時間に通知が届きます</div>
+              </div>
+              <div class="settings-time-picker">17:00</div>
+            </div>
+          </div>
+          <div class="settings-add-btn" style="margin-top:-8px;">＋ 確認時間を追加する</div>
+          <div class="settings-group-label">家族メンバー</div>
+          <div class="settings-card">
+            <div class="mini-member">
+              <div class="mini-avatar avatar-green">👴</div>
+              <div class="mini-name">お父さん（坂本 浩二）</div>
+              <div class="mini-role">確認される側</div>
+            </div>
+            <div class="mini-member">
+              <div class="mini-avatar avatar-yellow">👵</div>
+              <div class="mini-name">お母さん（坂本 幸子）</div>
+              <div class="mini-role">確認する側</div>
+            </div>
+            <div class="mini-member">
+              <div class="mini-avatar" style="background:#E8F0FF;">🧑</div>
+              <div class="mini-name">かえ</div>
+              <div class="mini-role">確認する側</div>
+            </div>
+          </div>
+          <div class="settings-add-btn">＋ 家族を追加する</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-label">⑤ 設定画面</div>
+  </div>
+
+</div>
+
+</body>
+</html>
