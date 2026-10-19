@@ -2,6 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+  <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#3DBD7D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="元気だよ">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ワンタッチ元気だよ — プロトタイプ</title>
 <style>
